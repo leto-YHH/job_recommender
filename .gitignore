@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+resumes/
+history.db
+chroma_db/
+.env
+profile_state.json*
+.claude/
+CLAUDE.md
