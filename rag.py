@@ -1,4 +1,6 @@
 """RAG 模組:職缺向量化 → 檢索 → Claude 重排序並產生推薦理由"""
+import uuid
+
 import anthropic
 import chromadb
 from sentence_transformers import SentenceTransformer
@@ -47,7 +49,11 @@ def retrieve(profile: dict, jobs: list[dict]) -> list[dict]:
 
     embedder = _get_embedder()
     chroma = chromadb.Client()                       # in-memory,每次執行重建
-    coll = chroma.get_or_create_collection("jobs")
+    # collection 名稱要唯一:chromadb.Client() 底層的 in-memory 儲存在同一個
+    # process 內會被重複使用,固定名稱("jobs")會讓同一次執行裡第二次呼叫
+    # retrieve()(例如地點偏好專屬檢索)疊加到前一次呼叫留下的資料上,
+    # 導致 query 回傳的 id 不在這次傳入的 jobs 裡而 KeyError。
+    coll = chroma.get_or_create_collection(f"jobs_{uuid.uuid4().hex}")
 
     texts = [_job_text(j) for j in jobs]
     print(f"… 對 {len(jobs)} 筆職缺做 embedding …")
